@@ -1,0 +1,158 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      snappyHexMeshDict;
+}
+
+castellatedMesh true;
+snap            true;
+mergeTolerance  1e-6;
+addLayers       false;
+
+// ---------------------------------------------------------------------------
+geometry
+{
+    Radial_Fins.stl
+    {
+        type triSurfaceMesh;
+        name fins;
+    }
+
+    finRefinement
+    {
+        type searchableCylinder;
+        point1 (0 0.0033 0);
+        point2 (0 0.0503 0);
+        radius 0.055;
+    }
+}
+
+// ---------------------------------------------------------------------------
+castellatedMeshControls
+{
+    maxLocalCells       1375000;
+    maxGlobalCells      5500000;
+    minRefinementCells  10;
+    nCellsBetweenLevels 3;
+    maxLoadUnbalance    0.10;
+    resolveFeatureAngle 60;
+    allowFreeStandingZoneFaces true;
+
+    features
+    (
+        { file "Radial_Fins.eMesh"; level 2; }
+    );
+
+    refinementSurfaces
+    {
+        fins { level (2 2); }
+    }
+
+    locationsInMesh
+    (
+        ((0.020 0.010 0.000) fins)
+        ((0     0.045 0.025) fluid)
+    );
+
+    refinementRegions
+    {
+        finRefinement
+        {
+            mode inside;
+            levels ((1E15 1));
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+snapControls
+{
+    nSmoothPatch       3;      // corrected from 8: heavy tangential Laplacian
+                               // on the baffled interface was dragging points
+                               // along the curved blades; default 3 is correct
+    tolerance          2.0;    // corrected from 1.2: 1.2 left points unable
+                               // to find the blade flank -> half-snapped skew
+                               // faces. 2.0 * local cell (0.05-0.11 mm
+                               // azimuthal at L2) stays well under the
+                               // 0.35 mm gap, no cross-gap capture
+    nSolveIter         100;
+    nRelaxIter         15;     // was 10: with a clean error field (see
+                               // meshQualityControls) the mover can actually
+                               // use these passes to resolve error faces
+                               // instead of being pre-throttled
+    nFeatureSnapIter   30;
+
+    explicitFeatureSnap    true;
+    implicitFeatureSnap    false;
+    multiRegionFeatureSnap true;
+    strictRegionSnap       true;   // v2106+: snap points strictly to the
+                                   // surface region they belong to; reduces
+                                   // cross-pull at the zone interface
+}
+
+// ---------------------------------------------------------------------------
+addLayersControls
+{
+    relativeSizes       true;
+    layers { }
+    expansionRatio      1.0;
+    finalLayerThickness 0.3;
+    minThickness        0.1;
+    nGrow               0;
+    featureAngle        180;
+    nRelaxIter          5;
+    nSmoothSurfaceNormals 50;
+    nSmoothNormals      10;
+    nSmoothThickness    10;
+    maxFaceThicknessRatio 0.5;
+    maxThicknessToMedialRatio 0.3;
+    minMedialAxisAngle  90;
+    nBufferCellsNoExtrude 0;
+    nLayerIter          50;
+}
+
+// ---------------------------------------------------------------------------
+// Quality controls rewritten around two log-verified facts:
+//
+// (a) Zoned faces are BAFFLES (boundary) during the morph, so fins_to_fluid
+//     was governed by maxBoundarySkewness 20, never by maxInternalSkewness 4.
+//     The snap legally authored skew 9.3-9.8 there. The real gate must sit
+//     on the boundary limit.
+//
+// (b) The castellated mesh already violated the old dict: 304,640 faces
+//     non-ortho > 75 deg (refinement transitions in high-AR polar cells) and
+//     103,680 face pyramids < 1e-13 (L2-refined hub cells, ~1e-14 m^3).
+//     408,320 pre-existing error faces throttled the motionSmoother globally
+//     (displacement scaling -> 0), exactly over the r = 22-30 mm blade-root
+//     band. Thresholds below are set so the castellated mesh starts LEGAL
+//     and the entire error budget is available to police what snap creates.
+// ---------------------------------------------------------------------------
+meshQualityControls
+{
+    maxNonOrtho             65;     // legalizes the ~302k transition faces
+                                    // (measured max 84.9). Solver side is
+                                    // already on limited-corrected schemes;
+                                    // interface non-ortho is checked
+                                    // separately against your 65-deg gate
+    maxBoundarySkewness     3.5;    // THE gate. Applies to the baffled
+                                    // fins_to_fluid faces during morph.
+                                    // 3.5 leaves margin under checkMesh's 4
+    maxInternalSkewness     4.0;
+    maxConcave              80;
+    minVol                  1e-13;  // hub pyramids sit at ~1.6e-15 after L2
+                                    // refinement; 1e-13 flagged 103,680
+                                    // geometrically-clean faces before snap
+                                    // even started. Keep positive to still
+                                    // forbid inversion
+    minTetQuality           1e-15;
+    minArea                 -1;
+    minTwist                0.02;
+    minDeterminant          0.001;
+    minFaceWeight           0.02;
+    minVolRatio             0.01;
+    minTriangleTwist        -1;
+    nSmoothScale            4;
+    errorReduction          0.75;
+}

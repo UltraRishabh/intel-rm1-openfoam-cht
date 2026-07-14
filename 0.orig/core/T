@@ -1,0 +1,54 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0/core";
+    object      T;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "$FOAM_CASE/constant/caseSettings"
+
+dimensions      [0 0 0 1 0 0 0];
+
+internalField   uniform $TinitCore;
+
+boundaryField
+{
+
+    core_to_fins
+{
+    type            compressible::turbulentTemperatureRadCoupledMixed;
+    qrNbr           none;
+    qr              none;
+    Tnbr            T;
+    kappaMethod     solidThermo;
+    thicknessLayers ( $jointThickness );
+    kappaLayers     ( $jointKappa );    // press-fit Al-Cu joint, ~25 kW/m2-K
+    value           uniform $TinitCore;
+}
+
+    core_to_ihs
+{
+    type            compressible::turbulentTemperatureRadCoupledMixed;
+    qrNbr           none;
+    qr              none;
+    Tnbr            T;
+    kappaMethod     solidThermo;
+    value           uniform $TinitCore;
+    thicknessLayers ( $tim2Thickness );
+    kappaLayers     ( $tim2Kappa );
+}
+    core_top
+    {
+        type            zeroGradient;       // adiabatic; top convection not modeled
+    }
+
+	core_to_fluid
+    {
+        type            zeroGradient;       
+    }
+}
+
+// ************************************************************************* //

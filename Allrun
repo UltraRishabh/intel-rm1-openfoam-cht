@@ -1,0 +1,16 @@
+#!/bin/sh
+cd "${0%/*}" || exit 1
+
+./Allblockmesh
+./Allsnappy
+./Allboundary
+./Allthermo
+./Allsolve
+
+# run the simulation instance completely from end to end.
+# 1. Creates a blockMesh for all regions, including one for fin_fluid
+# 2. Uses the snappyHexMesh utility to carve out the fins and fluid regions
+#    from the stl file "Radial_Fins.stl"
+# 3. Create appropriate boundary conditions for the patches.
+# 4. Place the appropriate thermophysicalProperties for all regions.
+# 5. Finally solve the case

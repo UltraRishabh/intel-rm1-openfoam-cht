@@ -1,0 +1,46 @@
+#!/bin/sh
+cd "${0%/*}" || exit 1
+set -e
+
+# Clean previous meshes and decomposition
+"${0%/*}/Allclean"
+
+mkdir -p logs
+
+# ------------------------------------------------------------------
+# Structured regions
+# ------------------------------------------------------------------
+for REGION in core ihs die
+do
+    echo "=== $REGION ==="
+
+    blockMesh \
+        -dict "system/${REGION}/blockMeshDict" \
+        -region "$REGION" \
+        2>&1 | tee "logs/log.blockMesh.${REGION}"
+
+    checkMesh \
+        -region "$REGION" \
+        -allGeometry \
+        2>&1 | tee "logs/log.check.${REGION}"
+done
+
+# ------------------------------------------------------------------
+# fin_fluid
+# ------------------------------------------------------------------
+REGION=fin_fluid
+
+echo "=== $REGION ==="
+
+blockMesh \
+    -dict "system/${REGION}/blockMeshDict" \
+    -region "$REGION" \
+    2>&1 | tee "logs/log.blockMesh.${REGION}"
+
+checkMesh \
+    -region "$REGION" \
+    -allGeometry \
+    2>&1 | tee "logs/log.check.background"
+
+surfaceFeatureExtract \
+    2>&1 | tee "logs/log.surfaceFeatureExtract"

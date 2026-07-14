@@ -1,0 +1,66 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;      // U is a vector field
+    location    "0/fluid";
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "$FOAM_CASE/constant/caseSettings"
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (0 0 0);
+
+boundaryField
+{
+    fluid_to_core
+    {
+        type            noSlip;
+    }
+
+    core_top
+    {
+        type            noSlip;
+    }
+
+    outerRim
+    {
+        type            pressureInletOutletVelocity;    // tolerates transient backflow
+        value           uniform (0 0 0);
+    }
+
+    bottom
+    {
+        type            noSlip;
+    }
+
+    shoulder
+    {
+        type            noSlip;
+    }
+
+    plenum_wall
+    {
+        type            noSlip;
+    }
+
+    plenum_top
+{
+    type        swirlFlowRateInletVelocity;
+    flowRate    constant $flowRate;
+    rpm         constant $inletFanRPM;
+    origin      (0 0.0503 0);
+    axis        (0 -1 0);
+    value       uniform (0 0 0);
+}
+
+    fluid_to_fins
+    {
+        type            noSlip;
+    }
+}
+
+// ************************************************************************* //

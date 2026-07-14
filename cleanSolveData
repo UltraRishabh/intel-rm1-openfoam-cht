@@ -1,0 +1,4 @@
+#!/bin/bash
+cd "${0%/*}" || exit
+
+rm -rf 0 postProcessing dynamicCode processor* logs/log.chtMultiRegionSimpleFoam logs/log.decomposePar logs/log.reconstructPar

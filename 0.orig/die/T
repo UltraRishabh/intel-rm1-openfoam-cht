@@ -1,0 +1,47 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0/die";
+    object      T;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "$FOAM_CASE/constant/caseSettings"
+
+dimensions      [0 0 0 1 0 0 0];
+
+internalField   uniform $TinitDie;
+
+boundaryField
+{
+    die_bottom
+{
+    type            externalWallHeatFluxTemperature;
+    mode            power;
+    Q               $dieInputPower;
+    kappaMethod     solidThermo;
+    value           uniform $TinitDie;
+}
+
+    die_to_ihs
+    {
+        type            compressible::turbulentTemperatureRadCoupledMixed;
+        qrNbr           none;
+        qr              none;
+        Tnbr            T;
+        kappaMethod     solidThermo;
+        value           uniform $TinitDie;
+	// TIM1 Definition
+    	thicknessLayers ( $tim1Thickness ); 
+    	kappaLayers     ( $tim1Kappa );     // 50 W/m-K thermal conductivity
+    }
+
+    die_sides
+    {
+        type            zeroGradient;       // adiabatic
+    }
+}
+
+// ************************************************************************* //

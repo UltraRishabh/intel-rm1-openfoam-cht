@@ -1,0 +1,9 @@
+#!/bin/sh
+cd "${0%/*}" || exit 1
+for R in fins fluid core ihs die; do
+  for F in thermophysicalProperties radiationProperties; do
+    cp templates/$R/$F constant/$R/$F 2>/dev/null || echo "FAILED: templates/$R/$F -> constant/$R/$F"
+  done
+done
+cp templates/fluid/turbulenceProperties constant/fluid/turbulenceProperties 2>/dev/null || echo "FAILED: templates/fluid/turbulenceProperties constant/fluid/turbulenceProperties"
+echo "(thermophysical + radiation + turbulence)Properties copied into constant/ for all 5 regions"

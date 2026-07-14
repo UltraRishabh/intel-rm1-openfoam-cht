@@ -1,0 +1,38 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0/fluid";
+    object      p_rgh;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "$FOAM_CASE/constant/caseSettings"
+
+dimensions      [1 -1 -2 0 0 0 0];
+
+internalField   uniform $pRef;
+
+boundaryField
+{
+    fluid_to_core  { type fixedFluxPressure; value uniform $pRef; }
+    core_top        { type fixedFluxPressure; value uniform $pRef; }
+
+    outerRim
+    {
+        type            fixedValue;         // atmospheric reference at exhaust
+        value           uniform $pRef;
+    }
+
+    bottom          { type fixedFluxPressure; value uniform $pRef; }
+    shoulder        { type fixedFluxPressure; value uniform $pRef; }
+    plenum_wall     { type fixedFluxPressure; value uniform $pRef; }
+
+    plenum_top      { type fixedFluxPressure; value uniform $pRef; }
+                    // velocity prescribed here, so pressure floats
+
+    fluid_to_fins   { type fixedFluxPressure; value uniform $pRef; }
+}
+
+// ************************************************************************* //

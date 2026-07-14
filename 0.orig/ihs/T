@@ -1,0 +1,60 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0/ihs";
+    object      T;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "$FOAM_CASE/constant/caseSettings"
+
+dimensions      [0 0 0 1 0 0 0];
+
+internalField   uniform $TinitIHS;
+
+boundaryField
+{
+    ihs_top_rest
+    {
+        type            zeroGradient;
+    }
+
+    ihs_bottom_rest
+    {
+        type            zeroGradient;       // adiabatic remainder of underside
+    }
+
+
+    ihs_sides
+    {
+        type            zeroGradient;       // adiabatic; justified, ~0.3 W loss
+    }
+
+    ihs_to_die
+    {
+        type            compressible::turbulentTemperatureRadCoupledMixed;
+        qrNbr           none;
+        qr              none;
+        Tnbr            T;
+        kappaMethod     solidThermo;
+        value           uniform $TinitIHS;
+	thicknessLayers ( $tim1Thickness );  
+    	kappaLayers     ( $tim1Kappa );     // 50 W/m-K thermal conductivity
+    }
+
+    ihs_to_core
+   {
+        type            compressible::turbulentTemperatureRadCoupledMixed;
+        qrNbr           none;
+        qr              none;
+        Tnbr            T;
+        kappaMethod     solidThermo;
+        value           uniform $TinitIHS;
+	thicknessLayers ( $tim2Thickness );
+    	kappaLayers     ( $tim2Kappa );
+    }
+}
+
+// ************************************************************************* //

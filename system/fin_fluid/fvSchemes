@@ -1,0 +1,18 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvSchemes;
+}
+// Required placeholder for multi-region cases: per-region files under
+// system/<region>/ carry the real settings.
+
+ddtSchemes          { default steadyState; }
+gradSchemes         { default Gauss linear; }
+divSchemes          { default none; }
+laplacianSchemes    { default Gauss linear corrected; }
+interpolationSchemes { default linear; }
+snGradSchemes       { default corrected; }
+
+// ************************************************************************* //

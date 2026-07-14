@@ -1,0 +1,29 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0/fluid";
+    object      p;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "$FOAM_CASE/constant/caseSettings"
+
+dimensions      [1 -1 -2 0 0 0 0];
+
+internalField   uniform $pRef;
+
+boundaryField
+{
+    fluid_to_core  { type calculated; value uniform $pRef; }
+    core_top        { type calculated; value uniform $pRef; }
+    outerRim        { type calculated; value uniform $pRef; }
+    bottom          { type calculated; value uniform $pRef; }
+    shoulder        { type calculated; value uniform $pRef; }
+    plenum_wall     { type calculated; value uniform $pRef; }
+    plenum_top      { type calculated; value uniform $pRef; }
+    fluid_to_fins   { type calculated; value uniform $pRef; }
+}
+
+// ************************************************************************* //

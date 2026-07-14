@@ -1,0 +1,68 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0/fluid";
+    object      T;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "$FOAM_CASE/constant/caseSettings"
+
+dimensions      [0 0 0 1 0 0 0];
+
+internalField   uniform $Tambient;      // fluid stays cold — no warm start
+
+boundaryField
+{
+    fluid_to_core
+    {
+        type            zeroGradient;   // requires boundary-file wall conversion first
+    }
+
+    core_top
+    {
+        type            zeroGradient;
+    }
+
+    outerRim
+    {
+        type            inletOutlet;
+        inletValue      uniform $Tambient;
+        value           uniform $Tambient;
+    }
+
+    bottom
+    {
+        type            zeroGradient;
+    }
+
+    shoulder
+    {
+        type            zeroGradient;
+    }
+
+    plenum_wall
+    {
+        type            zeroGradient;
+    }
+
+    plenum_top
+    {
+        type            fixedValue;     // fan draws ambient air
+        value           uniform $Tambient;
+    }
+
+    fluid_to_fins
+    {
+        type            compressible::turbulentTemperatureRadCoupledMixed;
+        qrNbr           none;
+        qr              none;
+        Tnbr            T;
+        kappaMethod     fluidThermo;    // fluid side
+        value           uniform $Tambient;
+    }
+}
+
+// ************************************************************************* //

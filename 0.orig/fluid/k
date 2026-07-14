@@ -1,0 +1,43 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0/fluid";
+    object      k;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "$FOAM_CASE/constant/caseSettings"
+
+dimensions      [0 2 -2 0 0 0 0];
+
+internalField   uniform 1e-3;
+
+boundaryField
+{
+    fluid_to_core  { type kLowReWallFunction; value uniform 1e-8; }
+    core_top        { type kLowReWallFunction; value uniform 1e-8; }
+
+    outerRim
+    {
+        type            inletOutlet;
+        inletValue      uniform 1e-3;
+        value           uniform 1e-3;
+    }
+
+    bottom          { type kLowReWallFunction; value uniform 1e-8; }
+    shoulder        { type kLowReWallFunction; value uniform 1e-8; }
+    plenum_wall     { type kLowReWallFunction; value uniform 1e-8; }
+
+    plenum_top
+    {
+        type            turbulentIntensityKineticEnergyInlet;
+        intensity       0.05;                   // 5% fan-churned inflow
+        value           uniform 1e-3;
+    }
+
+    fluid_to_fins   { type kLowReWallFunction; value uniform 1e-8; }
+}
+
+// ************************************************************************* //

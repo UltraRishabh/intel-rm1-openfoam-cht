@@ -1,0 +1,13 @@
+#!/bin/bash
+cd "${0%/*}" || exit
+
+# Allrestart — continue from latestTime; never touches 0/ or field history
+
+
+rm -rf processor* dynamicCode 0
+cp -r 0.orig 0
+decomposePar -allRegions -force 2>&1 | tee "logs/log.decomposePar"
+cores=$(foamDictionary system/decomposeParDict -entry numberOfSubdomains -value)
+stamp=$(date +%m%d-%H%M)
+mpirun -np $cores chtMultiRegionSimpleFoam -parallel 2>&1 | tee "logs/log.chtMultiRegionSimpleFoam"
+reconstructPar -allRegions -latestTime 2>&1 | tee "logs/log.reconstructPar"

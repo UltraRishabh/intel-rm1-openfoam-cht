@@ -1,0 +1,34 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    h
+    {
+        solver          PCG;      // Must be PBiCGStab (Asymmetric)
+        preconditioner  DIC;           // Must be DILU (Asymmetric)
+        tolerance       1e-07;
+        relTol          0.01;
+    }
+}
+
+SIMPLE
+{
+    nNonOrthogonalCorrectors 1;
+}
+
+relaxationFactors
+{
+    equations
+    {
+        h               0.99;
+    }
+}
+
+// ************************************************************************* //

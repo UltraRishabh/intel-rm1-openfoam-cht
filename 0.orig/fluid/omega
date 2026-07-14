@@ -1,0 +1,43 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0/fluid";
+    object      omega;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "$FOAM_CASE/constant/caseSettings"
+
+dimensions      [0 0 -1 0 0 0 0];
+
+internalField   uniform 100;
+
+boundaryField
+{
+    fluid_to_core  { type omegaWallFunction; value uniform 1e5; }
+    core_top        { type omegaWallFunction; value uniform 1e5; }
+
+    outerRim
+    {
+        type            inletOutlet;
+        inletValue      uniform 100;
+        value           uniform 100;
+    }
+
+    bottom          { type omegaWallFunction; value uniform 1e5; }
+    shoulder        { type omegaWallFunction; value uniform 1e5; }
+    plenum_wall     { type omegaWallFunction; value uniform 1e5; }
+
+    plenum_top
+    {
+        type            turbulentMixingLengthFrequencyInlet;
+        mixingLength    0.005;                  // ~inlet annulus scale
+        value           uniform 100;
+    }
+
+    fluid_to_fins   { type omegaWallFunction; value uniform 1e5; }
+}
+
+// ************************************************************************* //

@@ -1,0 +1,40 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| caseSettings — single source of truth for all 0.orig field files            |
+| Every field file pulls these via:                                           |
+|   #include "$FOAM_CASE/constant/caseSettings"                               |
+\*---------------------------------------------------------------------------*/
+
+// --- Ambient / anchor -------------------------------------------------------
+Tambient        294.15;         
+
+// --- Warm-start solids (from analytical R network, rounded) -----------------
+TinitDie        294.15;
+TinitIHS        294.15;
+TinitCore       294.15;
+TinitFins       294.15;
+
+// --- Heat load ---------------------------------------------------------------
+dieInputPower	81;	// Watt
+
+// --- Fan ---------------------------------------------------------------------
+inletFanRPM	1200;		// Inlet swirl in RPM for air (not exact fan RPM)
+flowRate        0.01;        // m^3/s = 36 CMH .
+
+// --- Pressure reference ------------------------------------------------------
+
+pRef            101325;
+
+// --- TIM & core-fin resistance (back-solve from R network before production runs) ----
+
+tim1Thickness  	75e-6;          // m   
+tim1Kappa       50;             // W/m.K
+tim2Thickness   100e-6;         // m   
+tim2Kappa       4;              // W/m.K
+
+jointThickness	40e-6;		// m	(core-fins contact resistance)
+jointKappa	0.5;		// W/m.K
+
+// --- Solver Config ----------------------------------------------------------
+numberOfCores	4;
+
+// ************************************************************************* //

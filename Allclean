@@ -1,0 +1,17 @@
+#!/bin/sh
+cd "${0%/*}" || exit 1
+
+rm -rf \
+    	0 \
+    	constant/fin_fluid \
+    	constant/fins \
+    	constant/fluid \
+    	constant/core \
+    	constant/ihs \
+    	constant/die \
+    	processor* \
+    	logs \
+    	postProcessing \
+	dynamicCode \
+	system/fin_fluid/domain* \
+	constant/domain*

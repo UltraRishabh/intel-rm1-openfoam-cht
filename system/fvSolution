@@ -1,0 +1,13 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvSolution;
+}
+// Required placeholder for multi-region cases: per-region files under
+// system/<region>/ carry the real settings.
+
+
+
+// ************************************************************************* //

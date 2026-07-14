@@ -1,0 +1,27 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0/fluid";
+    object      nut;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 2 -1 0 0 0 0];
+
+internalField   uniform 0;
+
+boundaryField
+{
+    fluid_to_core  { type nutUSpaldingWallFunction; value uniform 0; }
+    core_top        { type nutUSpaldingWallFunction; value uniform 0; }
+    outerRim        { type calculated;               value uniform 0; }
+    bottom          { type nutUSpaldingWallFunction; value uniform 0; }
+    shoulder        { type nutUSpaldingWallFunction; value uniform 0; }
+    plenum_wall     { type nutUSpaldingWallFunction; value uniform 0; }
+    plenum_top      { type calculated;               value uniform 0; }
+    fluid_to_fins   { type nutUSpaldingWallFunction; value uniform 0; }
+}
+
+// ************************************************************************* //

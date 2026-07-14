@@ -1,0 +1,10 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant/fluid";
+    object      turbulenceProperties;
+}
+// laminar: kOmegaSST inflates h ~40x through 0.35mm fin gaps
+simulationType  laminar;

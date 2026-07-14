@@ -1,0 +1,38 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2512                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      topoSetDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+actions
+(
+    // 1. all faces on the IHS top patch
+    {
+        name    core_faces;
+        type    faceSet;
+        action  new;
+        source  patchToFace;
+        patch   ihs_top_rest;
+    }
+    // 2. keep faces inside the 17.5 mm outer radius (full disk)
+    {
+        name    core_faces;
+        type    faceSet;
+        action  subset;
+        source  cylinderToFace;
+        p1      (0 0.0032 0);
+        p2      (0 0.0034 0);
+        radius  0.0175;
+    }
+
+);

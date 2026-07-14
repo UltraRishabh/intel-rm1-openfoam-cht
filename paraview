@@ -1,0 +1,5 @@
+#!/bin/sh
+cd "${0%/*}" || exit 1
+set -e
+
+open -a ParaView-6.1.1.app project.foam

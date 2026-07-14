@@ -1,0 +1,22 @@
+#!/bin/sh
+cd "${0%/*}" || exit 1
+set -e
+
+REGION=fin_fluid
+mkdir -p logs
+
+snappyHexMesh \
+    -region "$REGION" \
+    -overwrite \
+    2>&1 | tee "logs/log.snappy"
+
+splitMeshRegions \
+    -region "$REGION" \
+    -cellZones \
+    -overwrite \
+    2>&1 | tee "logs/log.split"
+
+checkMesh \
+    -allRegions \
+    -allGeometry \
+    2>&1 | tee "logs/log.check.final"

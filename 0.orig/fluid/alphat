@@ -1,0 +1,27 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0/fluid";
+    object      alphat;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [1 -1 -1 0 0 0 0];
+
+internalField   uniform 0;
+
+boundaryField
+{
+    fluid_to_core  { type compressible::alphatWallFunction; Prt 0.85; value uniform 0; }
+    core_top        { type compressible::alphatWallFunction; Prt 0.85; value uniform 0; }
+    outerRim        { type calculated;                                 value uniform 0; }
+    bottom          { type compressible::alphatWallFunction; Prt 0.85; value uniform 0; }
+    shoulder        { type compressible::alphatWallFunction; Prt 0.85; value uniform 0; }
+    plenum_wall     { type compressible::alphatWallFunction; Prt 0.85; value uniform 0; }
+    plenum_top      { type calculated;                                 value uniform 0; }
+    fluid_to_fins   { type compressible::alphatWallFunction; Prt 0.85; value uniform 0; }
+}
+
+// ************************************************************************* //

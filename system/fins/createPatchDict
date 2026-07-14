@@ -1,0 +1,30 @@
+/*--------------------------------*- C++ -*----------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      createPatchDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+pointSync false;
+
+patches
+(
+    {
+        name    fins_to_core;
+        patchInfo
+        {
+            type            mappedWall;
+            inGroups        1(wall);
+            sampleMode      nearestPatchFaceAMI;
+            sampleRegion    core;
+            samplePatch     core_to_fins;
+        }
+        constructFrom patches;
+        patches (fins_to_core fins);
+    }
+);
+
+// ************************************************************************* //

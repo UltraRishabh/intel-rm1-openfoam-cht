@@ -1,0 +1,18 @@
+#!/bin/bash
+cd "${0%/*}" || exit
+
+# --- fields --------------------------------------------------------
+"${0%/*}/cleanSolveData"
+cp -r 0.orig 0
+
+# --- decompose -----------------------------------------------------
+rm -rf processor*
+decomposePar -allRegions -force 2>&1 | tee "logs/log.decomposePar"
+
+# --- solve ---------------------------------------------------------
+cores=$(foamDictionary system/decomposeParDict -entry numberOfSubdomains -value)
+mpirun -np $cores chtMultiRegionSimpleFoam -parallel 2>&1 | tee "logs/log.chtMultiRegionSimpleFoam" 
+
+
+# --- reconstruct ---------------------------------------------------
+reconstructPar -allRegions -latestTime 2>&1 | tee "logs/log.reconstructPar"

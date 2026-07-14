@@ -1,0 +1,129 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      snappyHexMeshDict;
+}
+
+castellatedMesh true;
+snap            true;
+mergeTolerance 	1e-6;
+addLayers       false;          // first carve only; layers in tight 0.35 mm gaps come later
+
+// ---------------------------------------------------------------------------
+geometry
+{
+    Radial_Fins.stl
+    {
+        type triSurfaceMesh;
+        name fins;              // surface name == target cellZone name
+    }
+	
+	finRefinement
+    {
+        type searchableCylinder;
+
+        point1 (0 0.0033 0);
+        point2 (0 0.0293 0);
+
+        radius 0.050;
+    }
+}
+
+// ---------------------------------------------------------------------------
+castellatedMeshControls
+{
+    maxLocalCells       1250000;    // per-processor guard (8 GB / 4-core)
+    maxGlobalCells      5000000;    // hard RAM cap; snappy stops here if exceeded
+    minRefinementCells  10;
+    nCellsBetweenLevels 3;          // deliberately low: gap is only ~2 background cells wide
+    maxLoadUnbalance    0.10;
+    resolveFeatureAngle 60;
+    allowFreeStandingZoneFaces true;   // keep the blade<->fluid interface faces
+
+    features
+    (
+        { file "Radial_Fins.eMesh"; level 2; }   // run surfaceFeatureExtract first
+    );
+
+    refinementSurfaces
+{
+    fins { level (2 2); }          
+}
+
+locationsInMesh
+(
+    ((0.020 0.010 0.000) fins)     // inside the solid hub
+    ((0     0.045 0.025) fluid)    // plenum
+);
+
+    refinementRegions
+{
+    finRefinement
+    {
+        mode inside;
+
+        levels
+        (
+            (1E15 1)
+        );
+    }
+}
+
+    // Two flood seeds -> two cellZones. Both retained for CHT.
+    // NOTE: a single "fins" seed only floods the ONE connected solid that
+    //       contains it. See caveats — verify all 120 blades are one body.
+
+}
+
+snapControls
+{
+    nSmoothPatch       8;
+    tolerance          1.2;
+    nSolveIter         100;
+    nRelaxIter         10;
+    nFeatureSnapIter   20;
+
+    explicitFeatureSnap true;
+    implicitFeatureSnap false;
+    multiRegionFeatureSnap true;
+}
+
+addLayersControls
+{
+    relativeSizes       true;
+    layers { }
+    expansionRatio      1.0;
+    finalLayerThickness 0.3;
+    minThickness        0.1;
+    nGrow               0;
+    featureAngle        180;
+    nRelaxIter          5;
+    nSmoothSurfaceNormals 50;
+    nSmoothNormals      10;
+    nSmoothThickness    10;
+    maxFaceThicknessRatio 0.5;
+    maxThicknessToMedialRatio 0.3;
+    minMedialAxisAngle  90;
+    nBufferCellsNoExtrude 0;
+    nLayerIter          50;
+}
+
+meshQualityControls
+{
+    maxNonOrtho             75;
+    maxBoundarySkewness     20;
+    maxInternalSkewness     4;
+    maxConcave              80;
+    minVol                  1e-13;
+    minTetQuality           1e-15;  // relax to -1e30 only if snap stalls
+    minArea                 -1;
+    minTwist                0.02;
+    minDeterminant          0.001;
+    minFaceWeight           0.02;
+    minVolRatio             0.01;
+    minTriangleTwist        -1;
+    nSmoothScale            4;
+    errorReduction          0.75;
+}

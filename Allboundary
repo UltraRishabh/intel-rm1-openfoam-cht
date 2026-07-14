@@ -1,0 +1,109 @@
+#!/bin/sh
+cd "${0%/*}" || exit
+. "${WM_PROJECT_DIR:?}/bin/tools/RunFunctions"
+
+#------------------------------------------------------------------------------
+# Allboundary
+#
+# Converts the freshly-generated region-interface patches into coupled
+# mappedWall boundaries. Patches are addressed BY NAME through foamDictionary,
+# and only the semantic coupling keys are set:
+#
+#     type  sampleMode  sampleRegion  samplePatch  [AMIMethod]
+#
+# nFaces and startFace are never referenced, so whatever the mesh generator
+# (blockMesh / snappyHexMesh / splitMeshRegions / createPatch) wrote is left
+# byte-for-byte intact. Re-running is idempotent.
+#
+# Prerequisite pipeline (must have run already):
+#     Allblockmesh -> Allsnappy -> Allthermo    (splitMeshRegions complete)
+#
+# This script also builds ihs_to_core first, since createPatch is what makes
+# that patch exist before its coupling can be defined.
+#------------------------------------------------------------------------------
+
+# --- 1. Build the ihs_to_core & fluid_to_core patch from the annular faceSet -----------------
+runApplication -o topoSet     -region ihs
+runApplication -o createPatch -region ihs -overwrite
+runApplication -o topoSet     -region fluid
+runApplication -o createPatch -region fluid -overwrite
+
+# fold snappy's orphaned r=17.5 contact slivers (leftover 'fins' patch)
+# back into fins_to_core; zero-face 'fins' patch is auto-removed
+runApplication -o createPatch -region fins -overwrite
+
+# runApplication writes log.<app> in the case root; collect them into logs/
+# (the same dir the meshing stage uses). mkdir -p is a no-op if it exists.
+mkdir -p logs && mv -f log.topoSet log.createPatch logs/
+
+# --- 2. Interface table ------------------------------------------------------
+#   region  patch          partnerReg  partnerPatch   sampleMode            AMIMethod
+#   AMI ONLY on the genuinely non-conformal interface (ihs<->core, 5992 vs 1200).
+#   Conformal / split-half interfaces use nearestPatchFace (exact 1:1, weight=1).
+#   Do NOT AMI a conformal interface: it re-projects coincident faces and, on
+#   skewed cells, produces invalid normals and weights spiking to ~5x.
+INTERFACES="
+die    die_to_ihs     ihs    ihs_to_die     nearestPatchFaceAMI		-
+ihs    ihs_to_die     die    die_to_ihs     nearestPatchFaceAMI		-
+ihs    ihs_to_core    core   core_to_ihs    nearestPatchFaceAMI		-
+core   core_to_ihs    ihs    ihs_to_core    nearestPatchFaceAMI		-
+core   core_to_fins   fins   fins_to_core   nearestPatchFaceAMI		-
+fins   fins_to_core   core   core_to_fins   nearestPatchFaceAMI		-
+fins   fins_to_fluid  fluid  fluid_to_fins  nearestPatchFace		-
+fluid  fluid_to_fins  fins   fins_to_fluid  nearestPatchFace		-
+fluid  fluid_to_core  core   core_to_fluid  nearestPatchFace		-
+core   core_to_fluid  fluid  fluid_to_core  nearestPatchFace		-
+"
+
+set_key() {   # boundaryFile  patch  key  value
+    foamDictionary "$1" -entry "entry0/$2/$3" -set "$4" > /dev/null
+}
+
+echo "Setting coupled interfaces with AMI stabilization:"
+printf '%s\n' "$INTERFACES" | while read region patch pReg pPatch mode ami; do
+    [ -z "$region" ] && continue
+    b="constant/$region/polyMesh/boundary"
+
+    set_key "$b" "$patch" "type"         "mappedWall"
+    set_key "$b" "$patch" "sampleMode"   "$mode"
+    set_key "$b" "$patch" "sampleRegion" "$pReg"
+    set_key "$b" "$patch" "samplePatch"  "$pPatch"
+
+    if [ "$ami" != "-" ]; then
+        set_key "$b" "$patch" "AMIMethod" "$ami"
+        # STABILIZATION KEYS TO PREVENT FLUX EXPLOSIONS:
+        set_key "$b" "$patch" "AMIReverse" "false"
+        set_key "$b" "$patch" "matchTolerance" "0.0001"
+    else
+        foamDictionary "$b" -entry "entry0/$patch/AMIMethod" -remove > /dev/null 2>&1
+    fi
+
+    echo "  Configured $region/$patch -> $pReg/$pPatch ($mode)"
+done
+
+# --- 3. Verification gate ----------------------------------------------------
+# Deterministic pass/fail: read the keys back and compare to the table.
+echo
+echo "Verifying (type / sampleRegion / samplePatch):"
+fail=0
+printf '%s\n' "$INTERFACES" | while read region patch pReg pPatch mode ami; do
+    [ -z "$region" ] && continue
+    b="constant/$region/polyMesh/boundary"
+
+    t=$(foamDictionary "$b" -entry "entry0/$patch/type"         -value 2>/dev/null)
+    r=$(foamDictionary "$b" -entry "entry0/$patch/sampleRegion" -value 2>/dev/null)
+    s=$(foamDictionary "$b" -entry "entry0/$patch/samplePatch"  -value 2>/dev/null)
+
+    if [ "$t" = "mappedWall" ] && [ "$r" = "$pReg" ] && [ "$s" = "$pPatch" ]; then
+        printf '  PASS  %s/%s\n' "$region" "$patch"
+    else
+        printf '  FAIL  %s/%s  (type=%s region=%s patch=%s)\n' \
+            "$region" "$patch" "$t" "$r" "$s"
+        fail=1
+    fi
+done
+
+echo
+echo "Allboundary done."
+# Note: the pipe subshell cannot export 'fail'; scan the printed block above,
+# or check that no 'FAIL' lines appear:  ./Allboundary | grep -q FAIL && echo BAD
