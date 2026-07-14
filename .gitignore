@@ -1,0 +1,43 @@
+# -----------------------------
+# OpenFOAM generated files
+# -----------------------------
+
+# Time directories
+[1-9]*/
+[1-9][0-9]*/
+[1-9][0-9][0-9]*/
+[1-9]*.[0-9]*/
+
+# Parallel decomposition
+processor*/
+processors*/
+
+# Generated meshes
+constant/polyMesh/
+constant/*/polyMesh/
+
+# Generated mesh utilities
+constant/extendedFeatureEdgeMesh/
+constant/cellToRegion
+
+# Post-processing
+postProcessing/
+VTK/
+
+# Solver logs
+log*
+*.log
+
+# Core dumps
+core*
+
+# macOS
+.DS_Store
+
+# Editor temporary files
+*~
+*.swp
+
+# Python
+__pycache__/
+*.pyc
